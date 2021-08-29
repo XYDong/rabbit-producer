@@ -1,9 +1,9 @@
 package com.joker.rabbitproducer.component;
 
-import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.core.MessagePostProcessor;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.rabbit.core.RabbitTemplate.ConfirmCallback;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.MessageBuilder;
@@ -32,7 +32,7 @@ public class RabbitSender {
     /**
      * 确认消息的回调监听接口，用于确认消息是否被broker收到
      */
-    final RabbitTemplate.ConfirmCallback  confirmCallback = new RabbitTemplate.ConfirmCallback() {
+    final ConfirmCallback confirmCallback = new ConfirmCallback() {
 
         /**
          *
@@ -42,7 +42,7 @@ public class RabbitSender {
          */
         @Override
         public void confirm(CorrelationData correlationData, boolean b, String s) {
-
+            System.err.println("消息ack结果:" + b + ",    correlationData:" + correlationData+", 异常信息：" + s);
         }
     };
 
@@ -58,12 +58,10 @@ public class RabbitSender {
         rabbitTemplate.setConfirmCallback(confirmCallback);
         /*指定业务唯一id*/
         CorrelationData cd = new CorrelationData(UUID.randomUUID().toString().trim());
-        MessagePostProcessor messagePostProcessor = new MessagePostProcessor() {
-            @Override
-            public org.springframework.amqp.core.Message postProcessMessage(org.springframework.amqp.core.Message message) throws AmqpException {
-                System.out.println("-------> post to do:" + message);
-                return message;
-            }
+
+        MessagePostProcessor messagePostProcessor = message1 -> {
+            System.err.println("-------> post to do:" + message1);
+            return message1;
         };
 
 
